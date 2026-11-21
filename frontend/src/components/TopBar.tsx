@@ -1,15 +1,12 @@
 import { useState } from 'react';
 import {
-  Cpu,
   Home,
   Move3d,
   OctagonAlert,
   RefreshCw,
   RotateCcw,
-  Sliders,
+  SlidersHorizontal,
   Video,
-  Wifi,
-  WifiOff,
 } from 'lucide-react';
 import type { ArmState, DriverType, SerialPortInfo } from '../types/arm';
 import type { ControlMode } from './Arm3DViewport';
@@ -32,6 +29,30 @@ interface TopBarProps {
   onReset: () => void;
 }
 
+/** Flat 2-bar articulated arm glyph in solid primary text color */
+function ArmMark() {
+  return (
+    <svg
+      width="18"
+      height="18"
+      viewBox="0 0 18 18"
+      fill="none"
+      className="shrink-0 text-[#ededed]"
+      aria-hidden="true"
+    >
+      <path
+        d="M3 15H11M6 15V11L10.5 7.5L14 9"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <circle cx="6" cy="11" r="1.4" fill="currentColor" />
+      <circle cx="10.5" cy="7.5" r="1.4" fill="currentColor" />
+    </svg>
+  );
+}
+
 export function TopBar({
   connected,
   state,
@@ -51,101 +72,95 @@ export function TopBar({
 }: TopBarProps) {
   const [selectedPort, setSelectedPort] = useState<string>(ports[0]?.device ?? '');
 
-  const stateBadge = (() => {
-    if (!connected || state === 'DISCONNECTED') {
-      return 'bg-slate-800 text-slate-400 border-slate-700';
-    }
-    if (state === 'ESTOPPED') {
-      return 'bg-rose-500/20 text-rose-300 border-rose-500/40';
-    }
-    if (state === 'MOVING') {
-      return 'bg-sky-500/20 text-sky-300 border-sky-500/40';
-    }
-    return 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40';
+  const statusDotColor = (() => {
+    if (!connected || state === 'DISCONNECTED') return '#85858b';
+    if (state === 'ESTOPPED') return '#e5484d';
+    if (state === 'MOVING') return '#e5a93c';
+    return '#4cc38a';
+  })();
+
+  const statusLabel = (() => {
+    if (!connected) return 'Reconnecting';
+    if (state === 'ESTOPPED') return 'E-stopped';
+    if (state === 'MOVING') return 'Moving';
+    if (state === 'READY') return 'Ready';
+    return 'Offline';
   })();
 
   const effectivePort = selectedPort || ports[0]?.device || '';
 
   return (
-    <header className="shrink-0 flex flex-wrap items-center justify-between gap-2.5 border-b border-slate-800 bg-slate-900/90 px-4 py-2.5 backdrop-blur">
-      {/* Left: Brand & Connection Status */}
+    <header className="shrink-0 flex min-h-14 flex-wrap items-center justify-between gap-3 border-b border-[rgba(237,237,237,0.08)] bg-[#19191b] px-4 py-2">
+      {/* Left: Flat Wordmark + Quiet Status */}
       <div className="flex items-center gap-3">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-sky-500/15 text-sky-400">
-          <Cpu className="h-4.5 w-4.5" />
+        <div className="flex items-center gap-2">
+          <ArmMark />
+          <h1 className="text-[15px] font-medium text-[#ededed]">Arm Controller</h1>
         </div>
-        <div>
-          <h1 className="text-sm font-bold tracking-tight text-slate-100 leading-tight">
-            Robotic Arm Studio
-          </h1>
-          <div className="flex items-center gap-1.5 text-[11px] text-slate-400">
-            <span className="inline-flex items-center gap-1">
-              {connected ? (
-                <Wifi className="h-3 w-3 text-emerald-400" />
-              ) : (
-                <WifiOff className="h-3 w-3 text-rose-400" />
-              )}
-              {connected ? 'WS Connected' : 'Reconnecting...'}
-            </span>
-            <span>•</span>
-            <span className={`rounded-full border px-1.5 py-0.25 text-[10px] font-semibold ${stateBadge}`}>
-              {state}
-            </span>
-            {activePort && <span className="font-mono text-slate-400">({activePort})</span>}
-          </div>
+
+        <span className="h-4 w-px bg-[rgba(237,237,237,0.08)]" />
+
+        <div className="flex items-center gap-2 text-xs text-[#a1a1a6]">
+          <span
+            className="h-2 w-2 rounded-full shrink-0"
+            style={{ backgroundColor: statusDotColor }}
+          />
+          <span className="font-medium text-[#ededed]">{statusLabel}</span>
+          {activePort && (
+            <span className="font-mono text-[#85858b]">{activePort}</span>
+          )}
         </div>
       </div>
 
-      {/* Center: Control Mode Toggle + Camera Popup Toggle */}
+      {/* Center: Mode Switcher + Camera Window Toggle */}
       <div className="flex items-center gap-2">
-        <div className="flex items-center gap-1 rounded-lg border border-slate-800 bg-slate-950 p-0.5">
+        <div className="flex h-8 items-center rounded-lg border border-[rgba(237,237,237,0.08)] bg-[#141415] p-1">
           <button
             type="button"
             onClick={() => onControlModeChange('joint')}
-            className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-semibold transition ${
+            className={`inline-flex h-6 items-center gap-2 rounded-[5px] px-3 text-xs font-medium transition-colors duration-150 ${
               controlMode === 'joint'
-                ? 'bg-sky-500/20 text-sky-300 border border-sky-500/30'
-                : 'text-slate-400 hover:text-slate-200 border border-transparent'
+                ? 'bg-[#232325] text-[#ededed] shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]'
+                : 'text-[#85858b] hover:text-[#ededed]'
             }`}
           >
-            <Sliders className="h-3.5 w-3.5" />
-            Joint Mode
+            <SlidersHorizontal size={14} strokeWidth={1.5} />
+            Joint
           </button>
           <button
             type="button"
             onClick={() => onControlModeChange('spatial')}
-            className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-semibold transition ${
+            className={`inline-flex h-6 items-center gap-2 rounded-[5px] px-3 text-xs font-medium transition-colors duration-150 ${
               controlMode === 'spatial'
-                ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
-                : 'text-slate-400 hover:text-slate-200 border border-transparent'
+                ? 'bg-[#232325] text-[#e5a93c] shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]'
+                : 'text-[#85858b] hover:text-[#ededed]'
             }`}
           >
-            <Move3d className="h-3.5 w-3.5" />
-            Spatial Mode
+            <Move3d size={14} strokeWidth={1.5} />
+            Spatial
           </button>
         </div>
 
         <button
           type="button"
           onClick={onToggleCamera}
-          title={cameraOpen ? 'Hide Camera Window' : 'Open Camera Window'}
-          className={`inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-semibold transition ${
+          className={`inline-flex h-8 items-center gap-2 rounded-lg border px-3 text-xs font-medium transition-colors duration-150 ${
             cameraOpen
-              ? 'border-sky-500/40 bg-sky-500/15 text-sky-300'
-              : 'border-slate-700 bg-slate-950 text-slate-300 hover:bg-slate-800'
+              ? 'border-[rgba(237,237,237,0.16)] bg-[#232325] text-[#ededed] shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]'
+              : 'border-[rgba(237,237,237,0.08)] bg-[#141415] text-[#a1a1a6] hover:text-[#ededed]'
           }`}
         >
-          <Video className="h-3.5 w-3.5" />
+          <Video size={16} strokeWidth={1.5} className="text-[#85858b]" />
           Camera
           <span
-            className={`h-1.5 w-1.5 rounded-full ${
-              cameraAvailable ? 'bg-emerald-400' : 'bg-slate-500'
-            }`}
+            className="h-1.5 w-1.5 rounded-full"
+            style={{ backgroundColor: cameraAvailable ? '#4cc38a' : '#85858b' }}
           />
         </button>
       </div>
 
-      {/* Right: Driver, Port & Safety Controls */}
-      <div className="flex flex-wrap items-center gap-1.5">
+      {/* Right: Transport & Motion Controls */}
+      <div className="flex flex-wrap items-center gap-2">
         <select
           value={driver}
           onChange={(e) => {
@@ -157,12 +172,13 @@ export function TopBar({
             }
           }}
           disabled={!connected}
-          className="rounded-lg border border-slate-700 bg-slate-950 px-2 py-1.5 text-xs font-medium text-slate-200 focus:border-sky-500 focus:outline-none"
+          aria-label="Driver mode"
+          className="h-8 rounded-lg border border-[rgba(237,237,237,0.08)] bg-[#141415] px-2 text-xs text-[#ededed] transition-colors duration-150 hover:border-[rgba(237,237,237,0.16)] disabled:opacity-40"
         >
-          <option value="mock">Mock Simulator</option>
-          <option value="serial">Arduino Mega (Serial)</option>
+          <option value="mock">Simulator</option>
+          <option value="serial">Arduino Mega</option>
           <option value="pi_edge" disabled>
-            Raspberry Pi Edge (Future)
+            Raspberry Pi (soon)
           </option>
         </select>
 
@@ -171,10 +187,11 @@ export function TopBar({
             value={effectivePort}
             onChange={(e) => setSelectedPort(e.target.value)}
             disabled={!connected || ports.length === 0}
-            className="max-w-[145px] rounded-lg border border-slate-700 bg-slate-950 px-2 py-1.5 text-xs font-mono text-slate-200 focus:border-sky-500 focus:outline-none disabled:opacity-50"
+            aria-label="Serial port"
+            className="h-8 w-44 rounded-lg border border-[rgba(237,237,237,0.08)] bg-[#141415] px-2 font-mono text-xs text-[#ededed] transition-colors duration-150 hover:border-[rgba(237,237,237,0.16)] disabled:opacity-40"
           >
             {ports.length === 0 ? (
-              <option value="">No COM ports</option>
+              <option value="">No ports</option>
             ) : (
               ports.map((p) => (
                 <option key={p.device} value={p.device}>
@@ -186,53 +203,56 @@ export function TopBar({
           <button
             type="button"
             onClick={onRefreshPorts}
-            title="Refresh COM ports"
-            className="rounded-lg border border-slate-700 bg-slate-950 p-1.5 text-slate-300 hover:bg-slate-800"
+            title="Refresh serial ports"
+            aria-label="Refresh serial ports"
+            className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-[rgba(237,237,237,0.08)] bg-[#141415] text-[#a1a1a6] transition-colors duration-150 hover:border-[rgba(237,237,237,0.16)] hover:text-[#ededed]"
           >
-            <RefreshCw className="h-3.5 w-3.5" />
+            <RefreshCw size={16} strokeWidth={1.5} />
           </button>
           {driver !== 'serial' && effectivePort && (
             <button
               type="button"
               onClick={() => onSwitchDriver('serial', effectivePort)}
               disabled={!connected}
-              className="rounded-lg border border-sky-500/40 bg-sky-500/15 px-2 py-1.5 text-xs font-medium text-sky-300 hover:bg-sky-500/25"
+              className="inline-flex h-8 items-center rounded-lg border border-[rgba(237,237,237,0.16)] bg-[#232325] px-3 text-xs font-medium text-[#ededed] transition-colors duration-150 hover:bg-[#2c2c30] disabled:opacity-40"
             >
               Connect
             </button>
           )}
         </div>
 
-        <div className="mx-0.5 hidden h-5 w-px bg-slate-800 sm:block" />
+        <span className="hidden h-4 w-px bg-[rgba(237,237,237,0.08)] sm:block" />
 
         <button
           type="button"
           onClick={onHome}
           disabled={!connected || state === 'ESTOPPED'}
-          className="inline-flex items-center gap-1 rounded-lg border border-slate-700 bg-slate-800 px-2.5 py-1.5 text-xs font-semibold text-slate-200 hover:bg-slate-700 disabled:opacity-40"
+          className="inline-flex h-8 items-center gap-2 rounded-lg border border-[rgba(237,237,237,0.08)] bg-[#232325] px-3 text-xs font-medium text-[#ededed] shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] transition-[background-color,transform] duration-150 hover:bg-[#2c2c30] active:scale-[0.98] disabled:opacity-40"
         >
-          <Home className="h-3.5 w-3.5" />
+          <Home size={16} strokeWidth={1.5} className="text-[#a1a1a6]" />
           Home
         </button>
 
-        <button
-          type="button"
-          onClick={onReset}
-          disabled={!connected || state !== 'ESTOPPED'}
-          className="inline-flex items-center gap-1 rounded-lg border border-amber-500/40 bg-amber-500/15 px-2.5 py-1.5 text-xs font-semibold text-amber-300 hover:bg-amber-500/25 disabled:opacity-40"
-        >
-          <RotateCcw className="h-3.5 w-3.5" />
-          Reset
-        </button>
+        {state === 'ESTOPPED' && (
+          <button
+            type="button"
+            onClick={onReset}
+            disabled={!connected}
+            className="inline-flex h-8 items-center gap-2 rounded-lg bg-[#e5a93c] px-3 text-xs font-medium text-[#141415] transition-[background-color,transform] duration-150 hover:bg-[#edb854] active:scale-[0.98] disabled:opacity-40"
+          >
+            <RotateCcw size={16} strokeWidth={1.5} />
+            Reset
+          </button>
+        )}
 
         <button
           type="button"
           onClick={onEstop}
           disabled={!connected}
-          className="inline-flex items-center gap-1 rounded-lg bg-rose-600 px-3 py-1.5 text-xs font-bold uppercase tracking-wide text-white shadow-lg shadow-rose-900/40 hover:bg-rose-500 active:scale-95 disabled:opacity-40"
+          className="inline-flex h-8 items-center gap-2 rounded-lg bg-[#e5484d] px-3 text-xs font-medium text-[#ededed] transition-[background-color,transform] duration-150 hover:bg-[#ec5d62] active:scale-[0.98] disabled:opacity-40"
         >
-          <OctagonAlert className="h-3.5 w-3.5" />
-          E-Stop
+          <OctagonAlert size={16} strokeWidth={1.5} />
+          E-stop
         </button>
       </div>
     </header>

@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Terminal } from 'lucide-react';
 import { Arm3DViewport, type ControlMode } from './components/Arm3DViewport';
 import { CameraPanel } from './components/CameraPanel';
 import { JointControls } from './components/JointControls';
@@ -74,12 +73,11 @@ export function App() {
     [liveSync, sendJoints, speedDps]
   );
 
-  // In Spatial Preview mode (liveSync OFF), show targetAngles in 3D so the user previews before sending
   const viewportAngles =
     controlMode === 'spatial' && !liveSync ? targetAngles : liveAngles;
 
   return (
-    <div className="flex min-h-screen lg:h-screen lg:overflow-hidden flex-col bg-slate-950 text-slate-100">
+    <div className="flex min-h-screen flex-col bg-[#141415] text-[#ededed] lg:h-screen lg:overflow-hidden">
       <TopBar
         connected={connected}
         state={armState}
@@ -98,9 +96,9 @@ export function App() {
         onReset={sendReset}
       />
 
-      <main className="mx-auto grid w-full max-w-[1800px] flex-1 min-h-0 grid-cols-1 gap-3 p-3 lg:grid-cols-12">
-        {/* Left/Center: Full-Height 3D Viewport + Status Bar */}
-        <section className="flex min-h-0 flex-col gap-2.5 lg:col-span-8 xl:col-span-9">
+      <main className="mx-auto flex w-full max-w-[1800px] flex-1 min-h-0 flex-col gap-3 p-4 lg:flex-row">
+        {/* Main Stage: Full-Height 3D Viewport + Status Bar */}
+        <section className="flex flex-1 min-h-0 flex-col gap-3">
           <div className="flex-1 min-h-0">
             <Arm3DViewport
               angles={viewportAngles}
@@ -114,26 +112,29 @@ export function App() {
             />
           </div>
 
-          {/* Compact Status / Event Bar pinned below viewport */}
-          <div className="shrink-0 flex items-center justify-between rounded-xl border border-slate-800 bg-slate-900/70 px-4 py-2 text-xs">
-            <div className="flex items-center gap-2 font-mono truncate">
-              <Terminal className="h-3.5 w-3.5 shrink-0 text-slate-400" />
+          {/* Quiet Status Bar pinned below viewport */}
+          <div className="flex h-10 shrink-0 items-center justify-between gap-4 rounded-xl border border-[rgba(237,237,237,0.08)] bg-[#19191b] px-4 text-xs">
+            <div className="truncate font-mono">
               {lastLog ? (
-                <span className={lastLog.type === 'error' ? 'text-rose-400' : 'text-sky-300'}>
-                  [{lastLog.type.toUpperCase()}] {lastLog.message}
+                <span
+                  style={{
+                    color: lastLog.type === 'error' ? '#e5484d' : '#a1a1a6',
+                  }}
+                >
+                  {lastLog.message}
                 </span>
               ) : (
-                <span className="text-slate-400">System ready. Telemetry streaming at 20 Hz.</span>
+                <span className="text-[#85858b]">Telemetry 20 Hz</span>
               )}
             </div>
-            <span className="hidden shrink-0 font-mono text-slate-400 sm:inline ml-3">
-              Angles: [{liveAngles.map((a) => a.toFixed(0)).join(', ')}]°
+            <span className="hidden shrink-0 font-mono tabular-nums text-[#a1a1a6] sm:inline">
+              {liveAngles.map((a, i) => `J${i} ${a.toFixed(1)}°`).join('  ·  ')}
             </span>
           </div>
         </section>
 
-        {/* Right Sidebar: Joint Sliders */}
-        <aside className="min-h-0 lg:col-span-4 xl:col-span-3">
+        {/* Fixed-Width Right Sidebar: Joint Controls */}
+        <aside className="min-h-0 w-full shrink-0 lg:w-[320px]">
           <JointControls
             angles={targetAngles}
             liveAngles={liveAngles}

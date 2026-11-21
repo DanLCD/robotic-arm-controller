@@ -113,10 +113,10 @@ function RealisticArmModel({ angles, state }: { angles: number[]; state: ArmStat
 
   const accentColor =
     state === 'ESTOPPED'
-      ? '#ef4444'
+      ? '#e5484d'
       : state === 'MOVING'
-        ? '#38bdf8'
-        : '#22c55e';
+        ? '#e5a93c'
+        : '#4cc38a';
 
   return (
     <group position={[0, 0, 0]}>
@@ -246,9 +246,9 @@ interface SpatialGizmoLayerProps {
 }
 
 const ANCHOR_META: { id: AnchorId; label: string; color: string }[] = [
-  { id: 'elbow', label: 'J2 Elbow', color: '#f59e0b' },
-  { id: 'wrist', label: 'J3 Wrist', color: '#a855f7' },
-  { id: 'tip', label: 'Claw Tip', color: '#38bdf8' },
+  { id: 'elbow', label: 'J2 Elbow', color: '#a1a1a6' },
+  { id: 'wrist', label: 'J3 Wrist', color: '#ededed' },
+  { id: 'tip', label: 'Claw tip', color: '#e5a93c' },
 ];
 
 function SpatialGizmoLayer({
@@ -357,48 +357,49 @@ export function Arm3DViewport({
   };
 
   return (
-    <div className="relative h-full w-full min-h-[340px] lg:min-h-0 rounded-xl border border-slate-800 bg-slate-900/70 overflow-hidden">
+    <div className="relative h-full w-full min-h-[340px] lg:min-h-0 overflow-hidden rounded-xl border border-[rgba(237,237,237,0.08)] bg-[#0f0f10]">
       {/* Top-Left HUD */}
-      <div className="pointer-events-none absolute left-4 top-3 z-10 flex flex-wrap items-center gap-2">
-        <div className="flex items-center gap-2 rounded-md bg-slate-950/80 px-3 py-1.5 text-xs font-medium text-slate-300 backdrop-blur border border-slate-800/80">
+      <div className="pointer-events-none absolute left-4 top-4 z-10 flex flex-wrap items-center gap-2">
+        <div className="flex h-8 items-center gap-2 rounded-lg border border-[rgba(237,237,237,0.08)] bg-[#19191b] px-3 text-xs text-[#a1a1a6]">
           <span
-            className={`h-2 w-2 rounded-full ${
-              controlMode === 'spatial' ? 'bg-amber-400' : 'bg-sky-400'
-            }`}
+            className="h-1.5 w-1.5 rounded-full"
+            style={{
+              backgroundColor: controlMode === 'spatial' ? '#e5a93c' : '#85858b',
+            }}
           />
           {controlMode === 'spatial'
-            ? 'Spatial IK Mode (Click Anchor & Drag Arrows)'
-            : '3D Kinematic Preview (Drag to Orbit • Scroll to Zoom)'}
+            ? 'Select an anchor and drag'
+            : 'Drag to orbit, scroll to zoom'}
         </div>
 
         {controlMode === 'spatial' && (
-          <div className="rounded-md bg-slate-950/80 px-2.5 py-1.5 font-mono text-[11px] text-slate-300 backdrop-blur border border-slate-800/80">
-            X:{(activePos.x * 10).toFixed(1)} Y:{(activePos.y * 10).toFixed(1)} Z:
-            {(activePos.z * 10).toFixed(1)} cm
+          <div className="flex h-8 items-center gap-3 rounded-lg border border-[rgba(237,237,237,0.08)] bg-[#19191b] px-3 font-mono text-xs tabular-nums text-[#ededed]">
+            <span>X {(activePos.x * 10).toFixed(1)}</span>
+            <span>Y {(activePos.y * 10).toFixed(1)}</span>
+            <span>Z {(activePos.z * 10).toFixed(1)} cm</span>
             <span
-              className={`ml-2 font-sans font-semibold ${
-                reachable ? 'text-emerald-400' : 'text-amber-400'
-              }`}
+              className="font-sans text-xs font-medium"
+              style={{ color: reachable ? '#4cc38a' : '#e5a93c' }}
             >
-              {reachable ? '• Reachable' : '• Clamped'}
+              {reachable ? 'Reachable' : 'Clamped'}
             </span>
           </div>
         )}
       </div>
 
-      {/* Bottom-Left Anchor Selector Pills in Spatial Mode */}
+      {/* Bottom-Left Anchor Selector in Spatial Mode */}
       {controlMode === 'spatial' && (
-        <div className="absolute bottom-3 left-4 z-10 flex items-center gap-1.5 rounded-lg bg-slate-950/85 p-1.5 backdrop-blur border border-slate-800">
-          <span className="px-2 text-[11px] font-medium text-slate-400">Anchor:</span>
+        <div className="absolute bottom-4 left-4 z-10 flex items-center gap-1 rounded-lg border border-[rgba(237,237,237,0.08)] bg-[#19191b] p-1">
+          <span className="px-2 text-xs text-[#85858b]">Anchor</span>
           {ANCHOR_META.map((item) => (
             <button
               key={item.id}
               type="button"
               onClick={() => setActiveAnchor(item.id)}
-              className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium transition ${
+              className={`flex h-7 items-center gap-2 rounded-[5px] px-2.5 text-xs font-medium transition-colors duration-150 ${
                 activeAnchor === item.id
-                  ? 'bg-slate-800 text-white shadow'
-                  : 'text-slate-400 hover:text-slate-200'
+                  ? 'bg-[#232325] text-[#ededed] shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]'
+                  : 'text-[#85858b] hover:text-[#ededed]'
               }`}
             >
               <span
@@ -413,42 +414,43 @@ export function Arm3DViewport({
 
       {/* Bottom-Right Live Sync & Send Pose HUD in Spatial Mode */}
       {controlMode === 'spatial' && (
-        <div className="absolute bottom-3 right-4 z-10 flex items-center gap-2.5 rounded-lg bg-slate-950/85 px-3 py-1.5 backdrop-blur border border-slate-800">
-          <label className="flex items-center gap-2 text-xs text-slate-300 cursor-pointer select-none">
+        <div className="absolute bottom-4 right-4 z-10 flex h-9 items-center gap-3 rounded-lg border border-[rgba(237,237,237,0.08)] bg-[#19191b] px-3">
+          <label className="flex cursor-pointer select-none items-center gap-2 text-xs text-[#a1a1a6]">
             <input
               type="checkbox"
               checked={liveSync}
               onChange={(e) => onLiveSyncChange(e.target.checked)}
-              className="h-3.5 w-3.5 accent-amber-400 rounded"
+              className="h-3.5 w-3.5 rounded accent-[#e5a93c]"
             />
-            Live Sync
+            Live sync
           </label>
           {!liveSync && (
             <button
               type="button"
               disabled={locked}
               onClick={onSendPose}
-              className="inline-flex items-center gap-1.5 rounded-md bg-amber-500 px-2.5 py-1 text-xs font-bold text-slate-950 hover:bg-amber-400 disabled:opacity-40"
+              className="inline-flex h-7 items-center gap-2 rounded-md bg-[#e5a93c] px-3 text-xs font-medium text-[#141415] transition-[background-color,transform] duration-150 hover:bg-[#edb854] active:scale-[0.98] disabled:opacity-40"
             >
-              <Send className="h-3 w-3" />
-              Send Pose
+              <Send size={14} strokeWidth={1.5} />
+              Send pose
             </button>
           )}
         </div>
       )}
 
-      <Canvas shadows camera={{ position: [4.2, 3.6, 4.6], fov: 45 }}>
-        <color attach="background" args={['#090d16']} />
-        <ambientLight intensity={0.65} />
+      <Canvas shadows camera={{ position: [5.4, 4.0, 5.8], fov: 42 }}>
+        <color attach="background" args={['#0f0f10']} />
+        <hemisphereLight args={['#f4f4f6', '#232325', 0.75]} />
+        <ambientLight intensity={0.45} />
         <directionalLight
           position={[5, 8, 5]}
-          intensity={1.45}
+          intensity={1.55}
           castShadow
           shadow-mapSize-width={1024}
           shadow-mapSize-height={1024}
         />
-        <pointLight position={[-4, 3, -3]} intensity={0.5} color="#38bdf8" />
-        <pointLight position={[3, 2, -4]} intensity={0.35} color="#f8fafc" />
+        <pointLight position={[-4, 4, -3]} intensity={0.55} color="#ededed" />
+        <pointLight position={[3, 2, -4]} intensity={0.4} color="#e5a93c" />
 
         <RealisticArmModel angles={angles} state={state} />
 
@@ -466,20 +468,21 @@ export function Arm3DViewport({
         <Grid
           args={[12, 12]}
           cellSize={0.5}
-          cellThickness={0.6}
-          cellColor="#1e293b"
+          cellThickness={0.5}
+          cellColor="#1f1f22"
           sectionSize={2}
-          sectionThickness={1}
-          sectionColor="#334155"
-          fadeDistance={18}
+          sectionThickness={0.9}
+          sectionColor="#2c2c30"
+          fadeDistance={20}
           position={[0, 0, 0]}
         />
         <OrbitControls
           ref={orbitRef}
           makeDefault
+          target={[0, 1.75, 0]}
           enabled={!isDragging}
-          minDistance={2.2}
-          maxDistance={11}
+          minDistance={2.5}
+          maxDistance={14}
           maxPolarAngle={Math.PI / 2 - 0.03}
         />
       </Canvas>
